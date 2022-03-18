@@ -8,8 +8,10 @@ public:
 	void draw(sf::RenderWindow& w);
 	sf::Vector2f getCoords();
 	float getSpeedMovement();
+	void getDistance(sf::Vector2f c);
 	void rotateTurret(sf::Vector2f c);
 private:
 	sf::Vector2f m_targetPos;
+	float m_distance;
 };
 

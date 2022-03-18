@@ -12,7 +12,7 @@ Enemy::Enemy(std::string f, std::string n, sf::Vector2f c, float maxSM, float a,
 	m_spriteTurret.setTexture(m_texture);
 	m_spriteTurret.setTextureRect(sf::IntRect(352, 1, 255, 123));
 	m_spriteTurret.setOrigin(88, 123 / 2);
-	m_angle = m_angleTurret = 0;
+	m_angle = 0;
 }
 
 sf::Vector2f Enemy::getCoords()
@@ -22,30 +22,22 @@ sf::Vector2f Enemy::getCoords()
 
 float Enemy::getSpeedMovement()
 {
-	return m_speedMovement;
+	return m_speed;
+}
+
+void Enemy::getDistance(sf::Vector2f c)
+{
+	m_distance = sqrt((c.x - getCoords().x) * (c.x - getCoords().x) + (c.y - getCoords().y) * (c.y - getCoords().y));
 }
 
 void Enemy::Update(float time)
 {
-	if (m_angleTurret < m_angleTargetTurret) { // positive direction
-		m_angleTurret += 0.001f * time * m_speedRotateTurret * 0.01;
-		m_spriteTurret.setRotation(m_angleTurret * RADTODEG);
-	}
-	if (m_angleTurret > m_angleTargetTurret) { // negative direction
-		m_angleTurret += -0.001f * time * m_speedRotateTurret * 0.01;
-		m_spriteTurret.setRotation(m_angleTurret * RADTODEG);
-	} 
-
-	m_sprite.setRotation(m_angle);
-	m_sprite.setPosition(m_coords);
-	m_spriteTurret.setPosition(m_coords);
+	
 }
 
 void Enemy::rotateTurret(sf::Vector2f c)
 {
-	float dX = c.x - m_coords.x;
-	float dY = c.y - m_coords.y;
-	m_angleTargetTurret = atan2(dY, dX);
+	
 } 
 
 void Enemy::draw(sf::RenderWindow& w)

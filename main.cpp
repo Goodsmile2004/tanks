@@ -2,17 +2,20 @@
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include "Player.h"
+#include "Enemy.h"
 #include "Config.h"
 #include "map.h"
 #include "view.h"
 using namespace sf;
-// Проверка GitHub
+
 int main() {
 	sf::RenderWindow window(sf::VideoMode(W, H), "Game");
 
-	Player p("tank.png", "player", sf::Vector2f(500, 500), 3, 0.2, 3, 5);
+	Player p("tank1.png", "player", sf::Vector2f(500, 500), 64, 48, 10, 20);
+	//Enemy p1("tank.png", "enemy1", sf::Vector2f(1000, 700), 3, 0.2, 10, 5);
 
-	//view.reset(sf::FloatRect(0, 0, 640, 480));//размер "вида" камеры при создании объекта вида камеры. (потом можем менять как хотим) Что то типа инициализации.
+	view.reset(sf::FloatRect(0, 0, 640, 480));//размер "вида" камеры при создании объекта вида камеры. (потом можем менять как хотим) Что то типа инициализации.
+	
 	int framerate = 100;
 	float elapsedMillisecondsExpected = 1000.f / framerate,offsetX = 0;
 
@@ -23,13 +26,18 @@ int main() {
 	Sprite s_map;//создаём спрайт для карты
 	s_map.setTexture(map);//заливаем текстуру спрайтом
 
+	//window.setFramerateLimit(60);
+
 	while (window.isOpen())
 	{
 		sf::Clock clock;
 		float elapsedMilliseconds = clock.restart().asMicroseconds();
 
 		p.control(window);
-		p.rotateTurret();
+
+		//p1.rotateTurret(p.getCoords());
+
+		getplayercoordinateforview(p.getCoords());
 
 		sf::Event event;
 		while (window.pollEvent(event))
@@ -40,11 +48,12 @@ int main() {
 	
 		float sleepMilliseconds = elapsedMillisecondsExpected - elapsedMilliseconds;
 		int frames = int(elapsedMilliseconds / elapsedMillisecondsExpected) + 1;
-		for (int i = 0; i < frames; ++i) p.Update(elapsedMillisecondsExpected);
-
-		std::cout << p.m_speedMovement << std::endl;
+		for (int i = 0; i < frames; ++i) {
+			p.Update(elapsedMillisecondsExpected);
+			//p1.Update(elapsedMillisecondsExpected);
+		}
 		
-
+		//std::cout << p.getCoords().x << " " << p.getCoords().y << std::endl;
 		
 		window.clear();
 		/////////////////////////////Рисуем карту/////////////////////
@@ -60,6 +69,7 @@ int main() {
 				window.draw(s_map);//рисуем квадратики на экран
 			}
 		p.draw(window);
+		//p1.draw(window);
 		window.display();
 	}
 	return 0;
