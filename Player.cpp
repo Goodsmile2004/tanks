@@ -1,8 +1,10 @@
 #include "Player.h"
 #include <iostream>
 #include "Config.h"
+#include <Box2D/Box2D.h>
+#include "World.h"
 
-Player::Player(std::string f, std::string n, sf::Vector2f c, float w, float h, int s, float sR) :
+Player::Player(std::string f, std::string n, sf::Vector2f c, float w, float h, int s, float sR, int b) :
 	Entity(f, n, c, w, h, s, sR)
 {
 	m_sprite.setTextureRect(sf::IntRect(0, 0, w, h));
@@ -11,6 +13,7 @@ Player::Player(std::string f, std::string n, sf::Vector2f c, float w, float h, i
 	m_move = false;
 	m_dir = true;
 	m_changeDir = 1;
+	button = b;
 }
 
 sf::Vector2f Player::getCoords()
@@ -18,40 +21,104 @@ sf::Vector2f Player::getCoords()
 	return m_coords;
 }
 
+void Player::shoot()
+{
+	Bullet* B = new Bullet("", m_name, getCoords(), 100, m_angle);
+	bullets.push_back(B);
+}
+
 void Player::Update(float time)
 {
+	control();
 	float lenght = sqrt(cos(m_angle * DEGTORAD) * cos(m_angle * DEGTORAD) + sin(m_angle * DEGTORAD) * sin(m_angle * DEGTORAD));
-	if (m_move) {
-		m_coords += m_speed * time * sf::Vector2f(cos(m_angle * DEGTORAD) / lenght, sin(m_angle * DEGTORAD) / lenght) * 0.01f;
-	}
 
 	if (m_dir && !m_move) {
-		m_angle += -0.005f * time * m_speedRotate;
+		body->SetAngularVelocity(time * m_speedRotate);
 	}
-	if (!m_dir && !m_move) {
-		m_angle += 0.005f * time * m_speedRotate;
+	else if (!m_dir && !m_move) {
+		body->SetAngularVelocity(-time * m_speedRotate);
+	}
+	else {
+		body->SetAngularDamping(time * m_speedRotate);
 	}
 
-	m_sprite.setRotation(m_angle);
-	m_sprite.setPosition(m_coords);
+	for (auto& b : bullets) {
+		b->Update(time);
+		if (b->timer <= 0) { 
+			Bang* system = new Bang(b->m_coords.x, b->m_coords.y);
+			bangs.push_back(system);
+			delete b;  
+			bullets.erase(bullets.begin()); }
+	}
+	for (auto& b : bangs) {
+		b->UpdateState(time);
+	}
+
+	b2Vec2 pos = body->GetPosition();
+    float angle = body->GetAngle();
+	m_coords.x = pos.x * SCALE;
+	m_coords.y = pos.y * SCALE;
+	m_angle = angle * RADTODEG;
+
+	if (m_move) {
+		body->SetAngularVelocity(0);
+		body->SetLinearVelocity(b2Vec2(m_speed * 0.1 * cos(angle) / lenght, m_speed * 0.1 * sin(angle) / lenght));
+	}
+	else {
+		body->SetLinearDamping(m_speed);
+	}
+
+	m_sprite.setPosition(pos.x * SCALE, pos.y * SCALE);
+	m_sprite.setRotation(angle * RADTODEG);
 	m_move = false;
 }
 
-void Player::control(sf::RenderWindow& w)
+void Player::control()
 {
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-		m_move = true;
-		if (m_changeDir == 1) {
-			m_dir = !m_dir;
-			m_changeDir = 0;
+	switch (button) {
+	case 1:
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+			m_move = true;
+			if (m_changeDir == 1) {
+				m_dir = !m_dir;
+				m_changeDir = 0;
+				shoot();
+			}
 		}
+		else {
+			m_changeDir = 1;
+		}
+		break;
+	case 2:
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+			m_move = true;
+			if (m_changeDir == 1) {
+				m_dir = !m_dir;
+				m_changeDir = 0;
+				shoot();
+			}
+		}
+		else {
+			m_changeDir = 1;
+		}
+		break;
 	}
-	else {
-		m_changeDir = 1;
-	}
+}
+
+bool Player::collisionBorder(sf::Vector2f c)
+{
+	if (c.x > 0 && c.x < W && c.y > 0 && c.y < H) return true;
+	return false;
 }
 
 void Player::draw(sf::RenderWindow& w)
 {
 	w.draw(m_sprite);
+
+	for (auto& b : bullets) {
+		b->draw(w);
+	}
+	for (auto& b : bangs) {
+		b->Render(w);
+	}
 }
