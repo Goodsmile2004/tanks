@@ -1,7 +1,6 @@
 #include "Player.h"
 #include <iostream>
 #include "Config.h"
-#include "Bullet.h"
 #include <Box2D/Box2D.h>
 #include "World.h"
 
@@ -24,7 +23,7 @@ sf::Vector2f Player::getCoords()
 
 void Player::shoot()
 {
-	Bullet* B = new Bullet("", "bull", getCoords(), 100, m_angle);
+	Bullet* B = new Bullet("", m_name, getCoords(), 100, m_angle);
 	bullets.push_back(B);
 }
 
@@ -45,7 +44,14 @@ void Player::Update(float time)
 
 	for (auto& b : bullets) {
 		b->Update(time);
-		if (b->timer <= 0) { delete b;  bullets.erase(bullets.begin()); }
+		if (b->timer <= 0) { 
+			Bang* system = new Bang(b->m_coords.x, b->m_coords.y);
+			bangs.push_back(system);
+			delete b;  
+			bullets.erase(bullets.begin()); }
+	}
+	for (auto& b : bangs) {
+		b->UpdateState(time);
 	}
 
 	b2Vec2 pos = body->GetPosition();
@@ -111,5 +117,8 @@ void Player::draw(sf::RenderWindow& w)
 
 	for (auto& b : bullets) {
 		b->draw(w);
+	}
+	for (auto& b : bangs) {
+		b->Render(w);
 	}
 }

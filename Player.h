@@ -1,8 +1,11 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "Entity.h"
-#include "Bullet.h"
 #include <Box2D/Box2D.h>
+#include "Bang.h"
+#include "Scene.h"
+#include "Emitter.h"
+#include "Bullet.h"
 
 class Player : public Entity
 {
@@ -13,6 +16,7 @@ public:
 	void draw(sf::RenderWindow& w);
 	sf::Vector2f getCoords();
 	std::vector<Bullet*> bullets;
+	std::list<Emitter*> bangs;
 	void shoot();
 private:
 	bool m_move, m_dir;

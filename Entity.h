@@ -4,6 +4,7 @@
 class Entity
 {
 public:
+	//std::list<Player> objects;
 	std::string m_name;
 	sf::Image m_image;
 	sf::Texture m_texture;
