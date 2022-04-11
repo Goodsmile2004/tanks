@@ -1,25 +1,50 @@
 #include "Particle.h"
+#include <iostream>
 
-Particle::Particle(float x, float y, int r)
+Particle::Particle(sf::Image& _image, sf::Vector2f _position, sf::Vector2f _velocity, float _angle, float _angleVel, float _size, float _sizeVel, sf::Color _color, sf::Color _colorVel, float _lifeTime)
 {
-	m_radius = r + rand() % 20;
-	m_particle.setRadius(m_radius);
-	m_particle.setFillColor(sf::Color(105, 105, 105));
-	m_x = x, m_y = y;
-	m_particle.setPosition(m_x, m_y);
-	int direction = rand() % 360;
-	float speed = 0.1 + rand() % 5;
-	m_speedX = cos(direction * DEGTORAD) * speed;
-	m_speedY = sin(direction * DEGTORAD) * speed;
-	m_life = 5 + rand() % 75;
+	image = _image;
+	texture.loadFromImage(image);
+	sprite.setTexture(texture);
+
+	position = _position;
+	velocity = _velocity;
+
+	angle = _angle;
+	angleVel = _angleVel;
+
+	size = _size;
+	sizeVel = _sizeVel;
+
+	color = _color;
+	colorVel = _colorVel;
+
+	lifeTime = _lifeTime;
+}
+
+void Particle::Update(float time)
+{
+	lifeTime -= time;
+	position += velocity * time;
+	angle += angleVel * time;
+	size += sizeVel * time;
+	color.r += colorVel.r * time;
+	color.g += colorVel.g * time;
+	color.b += colorVel.b * time;
+	color.a += colorVel.a * time;
 }
 
 void Particle::Draw(sf::RenderWindow& w)
 {
-	float k = std::min(1.f, m_life / 100.f);
-	int alpha = (int)255 * k;
-	sf::Color color = m_particle.getFillColor();
-	color.a = alpha;
-	m_particle.setFillColor(color);
-	w.draw(m_particle);
+	sprite.setColor(color);
+	sprite.setPosition(position);
+	sprite.setRotation(angle);
+	sprite.setScale(size * 0.08, size * 0.08);
+	sprite.setOrigin(sprite.getLocalBounds().width / 2, sprite.getLocalBounds().height / 2);
+	w.draw(sprite);
+}
+
+bool Particle::Dissapear()
+{
+	return (lifeTime <= 0 || size <= 0);
 }

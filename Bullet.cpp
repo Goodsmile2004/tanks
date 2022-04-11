@@ -1,37 +1,103 @@
-#include <SFML/Graphics.hpp>
 #include "Bullet.h"
-#include "Config.h"
 
-Bullet::Bullet(std::string f, std::string n, sf::Vector2f c, int speed, float a) {
-	m_coords = c;
-	m_angle = a;
-	timer = 5;
-	bullet.setSize(sf::Vector2f(10, 5));
-	bullet.setFillColor(sf::Color::Black);
-	bullet.setRotation(m_angle);
-	bullet.setPosition(c);
-	m_speed = speed;
-	m_name = n;
-	/*
-	for (auto& p : lvl->players) {
-		objects.push_back(p);
-	}*/
-}
-
-void Bullet::Update(float time)
+Bullet::Bullet(sf::Sprite _spriteBullet, sf::Sprite _spriteExplosion, std::string _nameBullet)
 {
-	float lenght = sqrt(cos(m_angle * DEGTORAD) * cos(m_angle * DEGTORAD) + sin(m_angle * DEGTORAD) * sin(m_angle * DEGTORAD));
-	m_coords += m_speed * time * sf::Vector2f(cos(m_angle * DEGTORAD) / lenght, sin(m_angle * DEGTORAD) / lenght);
-	bullet.setPosition(m_coords);
-	timer -= time;
-	/*
-	for (auto& p : objects) {
-		if (p && m_coords == p->m_coords && m_name != p->m_name) {
-			delete p;
-			p = nullptr;
-		}
-	}*/
+	spriteBullet = _spriteBullet;
+	spriteExplosion = _spriteExplosion;
+
+	shooting = false;
+
+	speed = 2;
+
+	iCurrFrame = 0;
+	jCurrFrame = 0;
+	iFrames = spriteExplosion.getLocalBounds().width / widthFrame;
+	jFrames = spriteExplosion.getLocalBounds().height / widthFrame;
+	explode = false;
+	animationTime = 0;  
+
+	position = sf::Vector2f(0, 0);
+
+	currTimeLife = timeLife;
+
+	damage = 30;
+
+	deleteBullet = false;
+
+	nameBullet = _nameBullet;
 }
-void Bullet::draw(sf::RenderWindow& w) {
-	w.draw(bullet);
+
+void Bullet::Update(float gameTime, sf::Vector2f positionTank, float rotationGun, bool shoot, std::list<Player*> tanks)
+{
+	if (!shooting && !explode) {
+		shooting = shoot;
+		position = positionTank;
+		rotation = rotationGun;
+		currTimeLife = timeLife;
+	}
+
+	if (currTimeLife <= 0) {
+		shooting = false;
+		explode = true;
+	}
+
+	if (shooting) {
+		position += speed * sf::Vector2f(cos(rotation * DEGTORAD), sin(rotation * DEGTORAD)) * gameTime * 100.f; 
+	}
+
+	if (explode) {
+		if (animationTime > 0.1) {
+			if ((iCurrFrame + 1) * (jCurrFrame + 1) == iFrames * jFrames) {
+				iCurrFrame = 0;
+				jCurrFrame = 0;
+				explode = false;
+				deleteBullet = true;
+			}
+			else {
+				if (iCurrFrame < iFrames - 1) {
+					++iCurrFrame;
+				}
+				else {
+					iCurrFrame = 0;
+					++jCurrFrame;
+				}
+			}
+			animationTime = 0;
+		}
+		else {
+			animationTime += gameTime;
+		}
+	}
+
+	for (auto& tank : tanks) {
+		if (shooting && nameBullet != tank->getName() && tank->takeDamage(damage, position) == 1) {
+			shooting = false;
+			explode = true;
+		}
+	}
+
+	currTimeLife -= gameTime;
+}
+void Bullet::Draw(sf::RenderWindow& w)
+{
+	if (explode) {
+		spriteExplosion.setPosition(position);
+		spriteExplosion.setRotation(rotation);
+		spriteExplosion.setTextureRect(sf::IntRect(iCurrFrame * widthFrame, jCurrFrame * widthFrame, widthFrame, widthFrame));
+		spriteExplosion.setScale(0.8, 0.8);
+		spriteExplosion.setOrigin(spriteExplosion.getLocalBounds().width / 2, spriteExplosion.getLocalBounds().height / 2);
+		w.draw(spriteExplosion);
+	}
+	if (shooting) {
+		spriteBullet.setPosition(position);
+		spriteBullet.setRotation(rotation);
+		spriteBullet.setScale(0.03, 0.03);
+		spriteBullet.setOrigin(spriteBullet.getLocalBounds().width / 2, spriteBullet.getLocalBounds().height / 2);
+		w.draw(spriteBullet);
+	}
+}
+
+bool Bullet::getDeleteBullet()
+{
+	return deleteBullet;
 }

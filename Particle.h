@@ -1,14 +1,29 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Config.h"
+
 class Particle
 {
-public:
-	int m_life, m_radius;
-	float m_speedX, m_speedY;
-	float m_x, m_y;
-	sf::CircleShape m_particle;
-	Particle(float x, float y, int r);
-	void Draw(sf::RenderWindow& w);
-};
+	sf::Image image;
+	sf::Texture texture;
+	sf::Sprite sprite;
 
+	sf::Vector2f position;
+	sf::Vector2f velocity;
+
+	float angle;
+	float angleVel;
+
+	float size;
+	float sizeVel;
+
+	sf::Color color;
+	sf::Color colorVel;
+
+	float lifeTime;
+public:
+	Particle(sf::Image& _image, sf::Vector2f _position, sf::Vector2f _velocity, float _angle, float _angleVel,
+		float _size, float _sizeVel, sf::Color _color, sf::Color _colorVel, float _lifeTime);
+	void Update(float time);
+	void Draw(sf::RenderWindow& w);
+	bool Dissapear();
+};
